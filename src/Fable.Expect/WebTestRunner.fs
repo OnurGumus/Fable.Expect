@@ -117,7 +117,11 @@ module Expect =
 
     let private cleanHtml (html: string) =
         // Lit inserts comments with different values every time, so remove them
-        let html = Regex(@"<\!--[\s\S]*?-->").Replace(html, "")
+        // The exclamation mark is not escaped, and must not be: Fable now emits regexes
+        // with the u flag, under which a backslash before a character that needs no
+        // escaping is an illegal identity escape. The whole module threw SyntaxError on
+        // import, so any test file that touched it never ran at all.
+        let html = Regex(@"<!--[\s\S]*?-->").Replace(html, "")
         // Trailing whitespace seems to cause issues too
         let html = Regex(@"\s+\n").Replace(html, "\n")
         html.Trim()

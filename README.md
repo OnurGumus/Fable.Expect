@@ -1,5 +1,17 @@
 # Fable.Expect
 
+> ### This is an unofficial fork
+>
+> The original lives at [fable-compiler/Fable.Expect](https://github.com/fable-compiler/Fable.Expect) and is the one to use if it works for you. It was last touched in November 2021 and last released as 1.1.1, and does not run under Fable 5 at all — this fork exists to fix that. It publishes as `Fable.Expect.Unofficial`; namespaces and modules are unchanged, so switching is one line in your package references and nothing in your F# code.
+>
+> What differs from upstream:
+>
+> - **Toolchain**: .NET 10, Fable 5, Fable.Core 4, Elmish 5.
+> - **The HTML comment regex no longer uses an illegal identity escape.** `<\!--` is fine in a plain regex, but Fable now emits regexes with the `u` flag, under which it is a SyntaxError. `WebTestRunner` threw on import, so *any test file that touched it never ran* — a suite could report all-green while silently skipping half its files.
+> - **`AssertionError` sets `stack` on `this`, not `super`.** V8 answers `super.stack = v` with `TypeError: Cannot redefine property: stack`, so an error was thrown while an error was being built: every failing assertion arrived as the wrong exception, and any assertion inside a promise left that promise unsettled and the test timing out with nothing to say about the real failure.
+>
+> Both are offered upstream as PRs. If they land, this package gets deprecated on NuGet pointing at the original.
+
 `Fable.Expect` contains helpers to easily test your Fable apps following best practices. It's composed of several parts:
 
 - `Expect`: Assertion helpers that will throw errors compatible with diffing in JS test runners.

@@ -20,7 +20,7 @@ type JsError(message: string) =
     member _.stack with get(): string = jsNative and set(v: string): unit = jsNative
 
 [<AttachMembers>]
-type AssertionError<'T>(assertion: string, ?description: string, ?actual: 'T, ?expected: 'T, ?brief: bool, ?extra: string) =
+type AssertionError<'T>(assertion: string, ?description: string, ?actual: 'T, ?expected: 'T, ?brief: bool, ?extra: string) as this =
     inherit JsError(
         let brief = defaultArg brief false
         [
@@ -34,7 +34,13 @@ type AssertionError<'T>(assertion: string, ?description: string, ?actual: 'T, ?e
     )
     // Hide stack for cleaner reports as the test name is already shown
     // If we use an empty string the test runner shows the message twice (?)
-    do base.stack <- "<stack hidden>"
+    //
+    // On `this`, not on `base`. `base.stack <- v` compiles to `super.stack = v`, which
+    // V8 now answers with "TypeError: Cannot redefine property: stack" -- an error is
+    // thrown while an error is being built, so every failing assertion arrived as the
+    // wrong exception, and any assertion inside a promise left that promise unsettled
+    // and the test timing out with nothing to say about the actual failure.
+    do this.stack <- "<stack hidden>"
     // Test runner requires these properties to be settable, not sure why
     member val actual = actual with get, set
     member val expected = expected with get, set

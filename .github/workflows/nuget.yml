@@ -1,0 +1,78 @@
+name: Publish to NuGet
+
+# Push a tag, get a package. `git tag v2.0.1 && git push origin v2.0.1` publishes 2.0.1;
+# the workflow_dispatch input is the same thing without a tag, for a re-run after a
+# failed push.
+#
+# Not on every push to main: a public version can never be taken back, only unlisted, so
+# publishing should be a deliberate act.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, without the leading v (e.g. 2.0.1)'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    # Trusted Publishing, so there is no long-lived NuGet key in this repo. The job asks
+    # GitHub for a signed OIDC token describing this repository and this workflow file,
+    # nuget.org checks it against the policy registered under the ReverseBlade account,
+    # and returns an API key valid for one hour.
+    #
+    # This needs its own policy: the one for the Fable.Lit fork names that repository, and
+    # a policy is per repository, workflow file and environment. Register
+    # OnurGumus / Fable.Expect / nuget.yml with no environment before the first tag.
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # SourceLink stamps the commit into the symbols, and a shallow clone with no
+          # history gives it nothing to stamp.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [ -z "$VERSION" ]; then VERSION="${GITHUB_REF_NAME#v}"; fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing $VERSION"
+
+      # The version goes to the build as well as the pack, so `--no-build` below cannot
+      # write one version into the nuspec while the assembly inside carries another.
+      - name: Build
+        run: dotnet build src/Fable.Expect/Fable.Expect.fsproj -c Release -p:Version=${{ steps.version.outputs.value }}
+
+      - name: Pack
+        run: |
+          dotnet pack src/Fable.Expect/Fable.Expect.fsproj -c Release --no-build \
+            -o nupkgs -p:Version=${{ steps.version.outputs.value }}
+          ls -la nupkgs
+
+      # Last, and deliberately: the key this returns lives for an hour, and each OIDC
+      # token buys exactly one key. Asking before the build would spend it on a run that
+      # might never reach the push.
+      - name: Exchange the OIDC token for a short-lived key
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ReverseBlade
+
+      - name: Push
+        run: |
+          dotnet nuget push "nupkgs/*.nupkg" \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>1.1.1</Version>
-    <PackageVersion>1.1.1</PackageVersion>
+    <PackageId>Fable.Expect.Unofficial</PackageId>
+    <Description>Utilities to test Fable apps. Unofficial build of Fable.Expect, republished from a fork while fixes are pending upstream at github.com/fable-compiler/Fable.Expect.</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
     <NpmDependencies>
       <NpmPackage Name="@web/test-runner" Version="gte 0.13.18" ResolutionStrategy="Max" DevDependency="true" />
@@ -18,9 +18,9 @@
     <Content Include="*.fsproj; *.fs; *.js" PackagePath="fable\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Fable.Browser.Dom" Version="2.5.0" />
-    <PackageReference Include="Fable.Core" Version="3.4.0" />
-    <PackageReference Include="Fable.Elmish" Version="3.1.0" />
-    <PackageReference Include="Fable.Promise" Version="3.1.0" />
+    <PackageReference Include="Fable.Browser.Dom" Version="2.20.0" />
+    <PackageReference Include="Fable.Core" Version="4.5.0" />
+    <PackageReference Include="Fable.Elmish" Version="5.0.2" />
+    <PackageReference Include="Fable.Promise" Version="3.2.0" />
   </ItemGroup>
 </Project>
