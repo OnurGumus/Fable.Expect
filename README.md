@@ -10,7 +10,7 @@
 > - **The HTML comment regex no longer uses an illegal identity escape.** `<\!--` is fine in a plain regex, but Fable now emits regexes with the `u` flag, under which it is a SyntaxError. `WebTestRunner` threw on import, so *any test file that touched it never ran* — a suite could report all-green while silently skipping half its files.
 > - **`AssertionError` sets `stack` on `this`, not `super`.** V8 answers `super.stack = v` with `TypeError: Cannot redefine property: stack`, so an error was thrown while an error was being built: every failing assertion arrived as the wrong exception, and any assertion inside a promise left that promise unsettled and the test timing out with nothing to say about the real failure.
 >
-> Both are offered upstream as PRs. If they land, this package gets deprecated on NuGet pointing at the original.
+> Neither has been offered upstream yet. If they are, and they land, this package gets deprecated on NuGet pointing at the original.
 
 `Fable.Expect` contains helpers to easily test your Fable apps following best practices. It's composed of several parts:
 
